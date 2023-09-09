@@ -10,7 +10,10 @@ import SwiftUI
 struct ContentView: View {
     
     @State private var showingScore = false
+    @State private var showingFinalAlert = false
     @State private var scoreTitle = ""
+    @State private var playerScore = 0
+    @State private var questionsLeft = 8
     
     @State private var countries = ["Estonia", "France", "Germany", "Ireland", "Italy", "Nigeria", "Poland", "Ukraine", "Spain", "UK", "US"].shuffled()
     @State private var correctAnswer = Int.random(in: 0...2)
@@ -58,9 +61,14 @@ struct ContentView: View {
                 Spacer()
                 Spacer()
                 
-                Text("Score: ???")
+                Text("Score: \(playerScore)")
                     .foregroundStyle(.white)
                     .font(.title.bold())
+                Spacer()
+                
+                Text("Questions left: \(questionsLeft)")
+                    .foregroundStyle(.white)
+                    .font(.title.italic())
                 
                 Spacer()
             }
@@ -69,21 +77,49 @@ struct ContentView: View {
         .alert(scoreTitle, isPresented: $showingScore) {
             Button("Continue", action: askQuestion)
         } message: {
-            Text("Your score is ???")
+            Text("Your score is \(playerScore)")
+        }
+        .alert(scoreTitle, isPresented: $showingFinalAlert) {
+            Button("Restart Game", action: restartGame)
+        } message: {
+            Text("Your Final score is \(playerScore)")
         }
     }
     
     func flagTaped(_ number: Int) {
+        
         if number == correctAnswer {
             scoreTitle = "Correct"
+            playerScore += 1
         } else {
-            scoreTitle = "Wrong"
+            if number == 0 {
+                scoreTitle = "Wrong! That’s the flag of \(countries[0])"
+            } else if  number == 1 {
+                scoreTitle = "Wrong! That’s the flag of \(countries[1])"
+            } else {
+                scoreTitle = "Wrong! That’s the flag of \(countries[2])"
+            }
+            if playerScore >= 1 {
+                playerScore -= 1
+            }
         }
         
-        showingScore = true
+        questionsLeft -= 1
+        if questionsLeft <= 0 {
+            showingFinalAlert = true
+        } else {
+            showingScore = true
+        }
     }
     
     func askQuestion() {
+        countries.shuffle()
+        correctAnswer = Int.random(in: 0...2)
+    }
+    
+    func restartGame() {
+        questionsLeft = 8
+        playerScore = 0
         countries.shuffle()
         correctAnswer = Int.random(in: 0...2)
     }
