@@ -7,6 +7,15 @@
 
 import SwiftUI
 
+struct Title: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .font(.largeTitle)
+            .fontWeight(.bold)
+            .foregroundStyle(.blue)
+    }
+}
+
 struct ContentView: View {
     
     @State private var showingScore = false
@@ -30,8 +39,7 @@ struct ContentView: View {
                 Spacer()
                 
                 Text("Guest the Flag")
-                    .font(.largeTitle.bold())
-                    .foregroundStyle(.white)
+                    .modifier(Title())
                 VStack(spacing: 15) {
                     VStack {
                         Text("Tap flag of")
@@ -46,10 +54,7 @@ struct ContentView: View {
                         Button {
                             flagTaped(number)
                         } label: {
-                            Image(countries[number])
-                                .renderingMode(.original)
-                                .clipShape(.capsule)
-                                .shadow(radius: 5)
+                            flagImage(flagFileName: countries[number])
                         }
                     }
                 }
@@ -84,6 +89,13 @@ struct ContentView: View {
         } message: {
             Text("Your Final score is \(playerScore)")
         }
+    }
+    
+    func flagImage(flagFileName: String) -> some View {
+        return Image(flagFileName)
+            .renderingMode(.original)
+            .clipShape(.capsule)
+            .shadow(radius: 5)
     }
     
     func flagTaped(_ number: Int) {
