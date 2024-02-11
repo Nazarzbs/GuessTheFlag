@@ -18,11 +18,16 @@ struct Title: ViewModifier {
 
 struct ContentView: View {
     
+    @State private var tapedFlag = 0
+    
     @State private var showingScore = false
     @State private var showingFinalAlert = false
     @State private var scoreTitle = ""
     @State private var playerScore = 0
     @State private var questionsLeft = 8
+    @State private var animationAmounts = [0.0, 0.0, 0.0] // an array of animation amounts, one for each button
+    @State private var opacityAmounts = [1.0, 1.0, 1.0] // an array of opacity amounts, one for each button
+    @State private var scaleAmounts = [CGSize(width: 1.0, height: 1.0), CGSize(width: 1.0, height: 1.0), CGSize(width: 1.0, height: 1.0)] // an array of size amounts, one for each button
     
     @State private var countries = ["Estonia", "France", "Germany", "Ireland", "Italy", "Nigeria", "Poland", "Ukraine", "Spain", "UK", "US"].shuffled()
     @State private var correctAnswer = Int.random(in: 0...2)
@@ -52,12 +57,20 @@ struct ContentView: View {
                     
                     ForEach(0..<3) { number in
                         Button {
-                            flagTaped(number)
-                        } label: {
+                            withAnimation(.spring(duration: 1, bounce: 0.5)) {
+                                self.flagTapped(number) // pass the index of the button to the flagTapped function
+                            }
+                        }
+                       
+                    label: {
                             flagImage(flagFileName: countries[number])
                         }
+                    .rotation3DEffect(.degrees(animationAmounts[number]), axis: (x: 0, y: 1, z: 0)) // use the animation amount for
+                    .opacity(opacityAmounts[number])
+                    .scaleEffect(scaleAmounts[number])
                     }
                 }
+                
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 20)
                 .background(.regularMaterial)
@@ -98,12 +111,29 @@ struct ContentView: View {
             .shadow(radius: 5)
     }
     
-    func flagTaped(_ number: Int) {
+    func flagTapped(_ number: Int) {
         
         if number == correctAnswer {
-            scoreTitle = "Correct"
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                askQuestion()
+            }
+            
+//            scoreTitle = "Correct"
             playerScore += 1
+            animationAmounts[number] += 360 // update the animation amount for the correct button
+            switch number {
+            case 0:
+                opacityAmounts = [1.0, 0.3, 0.3]
+                scaleAmounts = [CGSize(width: 1.0, height: 1.0), CGSize(width: 0.8, height: 0.8), CGSize(width: 0.8, height: 0.8)]
+            case 1:
+                opacityAmounts = [0.3, 1.0, 0.3]
+                scaleAmounts = [CGSize(width: 0.8, height: 0.8), CGSize(width: 1.0, height: 1.0), CGSize(width: 0.8, height: 0.8)]
+            default:
+                opacityAmounts = [0.3, 0.3, 1.0]
+                scaleAmounts = [CGSize(width: 0.8, height: 0.8), CGSize(width: 0.8, height: 0.8), CGSize(width: 1.0, height: 1.0)]
+            }
         } else {
+            animationAmounts[number] -= 360 // update the animation amount for the correct button
             if number == 0 {
                 scoreTitle = "Wrong! That’s the flag of \(countries[0])"
             } else if  number == 1 {
@@ -118,15 +148,27 @@ struct ContentView: View {
         
         questionsLeft -= 1
         if questionsLeft <= 0 {
-            showingFinalAlert = true
-        } else {
-            showingScore = true
+            withAnimation {
+                showingFinalAlert = true
+            }
+            
+        } else if number != correctAnswer {
+            withAnimation {
+                showingScore = true
+            }
         }
+        
+       
     }
     
     func askQuestion() {
+        withAnimation(.spring(duration: 1, bounce: 0.5)) {
         countries.shuffle()
         correctAnswer = Int.random(in: 0...2)
+        animationAmounts = [0.0, 0.0, 0.0] // reset the animation amounts
+        opacityAmounts = [1.0, 1.0, 1.0]
+        scaleAmounts = [CGSize(width: 1.0, height: 1.0), CGSize(width: 1.0, height: 1.0), CGSize(width: 1.0, height: 1.0)]
+        }
     }
     
     func restartGame() {
@@ -140,3 +182,4 @@ struct ContentView: View {
 #Preview {
     ContentView()
 }
+
